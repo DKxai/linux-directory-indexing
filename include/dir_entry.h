@@ -36,6 +36,9 @@ char** generate_lookup_misses(int num_targets);
 // free_lookup_targets - Free mang ten
 void free_lookup_targets(char** targets, int count);
 
+// generate_delete_targets - Tao mang ten de test delete (lay tu entries da ton tai)
+char** generate_delete_targets(DirEntry* entries, int num_entries, int num_targets);
+
 // print_dir_entry - In thong tin DirEntry
 void print_dir_entry(const DirEntry* entry);
 

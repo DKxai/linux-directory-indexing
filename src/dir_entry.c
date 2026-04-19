@@ -91,6 +91,23 @@ void free_lookup_targets(char** targets, int count) {
     free(targets);
 }
 
+// generate_delete_targets - Lay mang ten tu entries, dung de test delete
+// Chon cac entry tu cuoi mang de tranh trung voi lookup hits
+char** generate_delete_targets(DirEntry* entries, int num_entries, int num_targets) {
+    if (num_targets > num_entries)
+        num_targets = num_entries;
+
+    char** targets = (char**)malloc(num_targets * sizeof(char*));
+    if (!targets) return NULL;
+
+    // Lay entries tu cuoi mang (phan khong trung voi lookup hits)
+    for (int i = 0; i < num_targets; i++) {
+        int idx = num_entries - 1 - (i % num_entries);
+        targets[i] = strdup(entries[idx].name);
+    }
+    return targets;
+}
+
 // print_dir_entry - Print Dir object
 void print_dir_entry(const DirEntry* entry) {
     const char* type_str;
