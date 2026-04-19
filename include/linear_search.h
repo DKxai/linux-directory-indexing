@@ -21,6 +21,9 @@ int linear_insert(LinearDir* dir, const DirEntry* entry);
 // linear_lookup - Tim kiem entry (tuan tu)
 DirEntry* linear_lookup(LinearDir* dir, const char* name, uint64_t* comparisons);
 
+// linear_delete - Xoa entry theo ten (quet tuan tu, swap voi phan tu cuoi)
+int linear_delete(LinearDir* dir, const char* name, uint64_t* comparisons);
+
 // linear_memory_usage - Tinh bo nho da dung
 size_t linear_memory_usage(const LinearDir* dir);
 

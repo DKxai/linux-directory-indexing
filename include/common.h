@@ -30,6 +30,7 @@ static const int TEST_SIZES[NUM_TEST_SIZES] = {
 /* Number of lookups per benchmark run */
 #define NUM_LOOKUPS_HIT   1000   /* Lookups for existing entries */
 #define NUM_LOOKUPS_MISS  100    /* Lookups for non-existing entries */
+#define NUM_DELETES       500    /* Deletes per benchmark run */
 #define BENCHMARK_ROUNDS  3      /* Number of rounds to average */
 
 /* ===== Timer Macros ===== */
@@ -52,6 +53,8 @@ typedef struct {
     uint64_t avg_lookup_miss_ns;           /* Thoi gian trung binh lookup miss (ns) */
     uint64_t avg_comparisons_hit;          /* So comparisons trung binh (hit) */
     uint64_t avg_comparisons_miss;         /* So comparisons trung binh (miss) */
+    uint64_t avg_delete_time_ns;           /* Thoi gian trung binh delete (ns) */
+    uint64_t avg_delete_comparisons;       /* So comparisons trung binh khi delete */
     size_t   memory_usage_bytes;           /* Bo nho su dung (bytes) */
 } BenchmarkResult;
 

@@ -5,13 +5,13 @@
 
 ## 📋 Tổng quan
 
-Chương trình mô phỏng cách filesystem quản lý directory entries và đo hiệu năng tra cứu (lookup).
+Chương trình mô phỏng cách filesystem quản lý directory entries và đo hiệu năng các operations: **insert**, **lookup**, và **delete**.
 
 ### Tiến độ hiện tại: Tuần 3 — Linear Search Baseline
 
 | Tuần | Nội dung | Trạng thái |
 |------|----------|-----------|
-| 3 | Project setup + Linear Search | ✅ Hoàn thành |
+| 3 | Project setup + Linear Search (insert/lookup/delete) | ✅ Hoàn thành |
 | 4 | Hash Table | ⬜ Chưa bắt đầu |
 | 5 | B-Tree | ⬜ Chưa bắt đầu |
 | 6 | HTree (ext4) + Benchmark Framework | ⬜ Chưa bắt đầu |
@@ -64,28 +64,42 @@ linux-directory-indexing/
 ├── include/                 # Header files
 │   ├── common.h             # Types, macros, constants chung
 │   ├── dir_entry.h          # Cấu trúc directory entry
-│   ├── linear_search.h      # API Linear Search
+│   ├── linear_search.h      # API Linear Search (create/insert/lookup/delete)
 │   └── benchmark.h          # API Benchmark framework
 ├── src/                     # Source files
 │   ├── main.c               # Entry point + menu
 │   ├── dir_entry.c          # Tạo directory entries ngẫu nhiên
 │   ├── linear_search.c      # Triển khai Linear Search
-│   └── benchmark.c          # Framework đo hiệu năng
-├── results/                 # Kết quả benchmark
-└── docs/
-    └── week3_progress.md    # Báo cáo tiến độ tuần 3
+│   └── benchmark.c          # Framework đo hiệu năng (insert/lookup/delete)
+├── results/                 # Kết quả benchmark (CSV)
+└── scripts/                 # Scripts phụ trợ
 ```
+
+## 📊 Operations đã triển khai (Week 3)
+
+| Operation | Hàm | Complexity | Mô tả |
+|-----------|-----|------------|--------|
+| **Create** | `linear_create()` | O(1) | Khởi tạo mảng động |
+| **Insert** | `linear_insert()` | O(1) amortized | Append + auto-resize ×2 |
+| **Lookup** | `linear_lookup()` | O(n) | Quét tuần tự, đếm comparisons |
+| **Delete** | `linear_delete()` | O(n) | Quét + swap-with-last |
+| **Destroy** | `linear_destroy()` | O(1) | Free bộ nhớ |
 
 ## 📊 Kết quả Baseline (Linear Search)
 
-| N | Lookup (ns) | Comparisons | Memory (KB) |
-|---|------------|-------------|-------------|
-| 100 | ~250 | ~51 | 33 |
-| 1,000 | ~1,400 | ~516 | 264 |
-| 10,000 | ~13,500 | ~4,995 | 4,224 |
-| 100,000 | ~173,000 | ~50,077 | 33,792 |
+| N | Lookup (ns) | Comparisons | Delete (ns) | Del Comp | Memory (KB) |
+|---|------------|-------------|-------------|----------|-------------|
+| 100 | ~215 | ~51 | ~159 | ~50 | 33 |
+| 1,000 | ~1,372 | ~516 | ~2,342 | ~750 | 264 |
+| 10,000 | ~13,119 | ~4,995 | ~25,966 | ~9,750 | 4,224 |
+| 100,000 | ~220,156 | ~50,077 | ~623,296 | ~99,750 | 33,792 |
+| 1,000,000 | ~5,332,360 | ~494,913 | ~10,906,672 | ~999,750 | 270,336 |
 
-➡️ Xác nhận O(n) behavior: thời gian tăng tuyến tính theo N.
+### Nhận xét
+- ✅ **Lookup O(n)**: comparisons trung bình ≈ N/2, thời gian tăng tuyến tính
+- ✅ **Delete O(n)**: comparisons trung bình ≈ N (worst case quét hết mảng)
+- ✅ **Valgrind**: 0 memory leaks, 0 errors
+- Đây là **baseline** để so sánh với Hash Table, B-Tree, HTree ở các tuần sau
 
 ## 📚 Tài liệu tham khảo
 

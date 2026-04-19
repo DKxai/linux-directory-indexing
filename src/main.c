@@ -14,11 +14,11 @@ static int g_result_count = 0;
 static void run_interactive_demo(void) {
   print_header("INTERACTIVE DEMO — Linear Search");
 
-  printf("  Nhập số entries để demo (khuyến nghị 10-1000): ");
+  printf("  Nhap so entries de demo (khuyen nghi 10-1000): ");
   int n;
   // Kiem tra dau vao, default neu miss
   if (scanf("%d", &n) != 1 || n <= 0 || n > 100000) {
-    printf("  ✗ Số không hợp lệ. Dùng mặc định: 100\n");
+    printf("  ✗ So khong hop le. Dung mac dinh: 100\n");
     n = 100;
   }
 
@@ -26,19 +26,19 @@ static void run_interactive_demo(void) {
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 
-  printf("\n  Đang tạo %d directory entries...\n", n);
+  printf("\n  Dang tao %d directory entries...\n", n);
   DirEntry *entries = generate_random_entries(n);
   if (!entries) {
-    printf("  ✗ Lỗi cấp phát bộ nhớ!\n");
+    printf("  ✗ Loi cap phat bo nho!\n");
     return;
   }
 
-  printf("\n  Mẫu entries (5/%d):\n", n);
+  printf("\n  Mau entries (5/%d):\n", n);
   for (int i = 0; i < 5 && i < n; i++) {
     print_dir_entry(&entries[i]);
   }
 
-  printf("\n  Đang tạo Linear Search directory...\n");
+  printf("\n  Dang tao Linear Search directory...\n");
 
   LinearDir *lin_dir = linear_create();
 
@@ -47,8 +47,9 @@ static void run_interactive_demo(void) {
   for (int i = 0; i < n; i++) {
     linear_insert(lin_dir, &entries[i]);
   }
-  printf("  ✓ Đã insert %d entries vào Linear Search directory\n\n", n);
+  printf("  ✓ Da insert %d entries vao Linear Search directory\n\n", n);
 
+  // --- Demo LOOKUP ---
   const char *search_name = entries[n / 2].name;
   printf("  Demo lookup: \"%s\"\n", search_name);
   printf("  ─────────────────────────────────────────────\n");
@@ -63,27 +64,47 @@ static void run_interactive_demo(void) {
          found ? "FOUND" : "NOT FOUND", (unsigned long)comp,
          (unsigned long)TIMER_ELAPSED_NS());
 
+  // --- Demo DELETE ---
+  const char *delete_name = entries[n / 4].name;
+  printf("\n  Demo delete: \"%s\"\n", delete_name);
+  printf("  ─────────────────────────────────────────────\n");
+
+  TIMER_START();
+  comp = 0;
+  int del_result = linear_delete(lin_dir, delete_name, &comp);
+  TIMER_END();
+  printf("  Linear Delete:  %s | %lu comparisons | %lu ns\n",
+         del_result == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
+         (unsigned long)TIMER_ELAPSED_NS());
+
+  // Verify delete
+  comp = 0;
+  DirEntry *verify = linear_lookup(lin_dir, delete_name, &comp);
+  printf("  Verify lookup:  %s (sau khi delete)\n",
+         verify ? "FOUND (LOI!)" : "NOT FOUND (dung)");
+
   printf("\n  Memory Usage:\n");
   printf("  ─────────────────────────────────────────────\n");
   printf("  Linear Search:  %zu KB\n", linear_memory_usage(lin_dir) / 1024);
+  printf("  Entries count:  %d (truoc: %d, da xoa: 1)\n", lin_dir->count, n);
 
   linear_destroy(lin_dir);
   free(entries);
 
-  printf("\n  ✓ Demo hoàn tất!\n");
+  printf("\n  ✓ Demo hoan tat!\n");
 }
 
 // run_single_method - Test input so luong chi chay cho method 1
 static void run_single_method(void) {
   print_header("SINGLE METHOD BENCHMARK");
 
-  printf("  Hiện tại chỉ có Linear Search.\n");
+  printf("  Hien tai chi co Linear Search.\n");
 
-  printf("  Nhập số entries (100-1000000): ");
+  printf("  Nhap so entries (100-1000000): ");
   int n;
   int c;
   if (scanf("%d", &n) != 1 || n <= 0 || n > 1000000) {
-    printf("  ✗ Số không hợp lệ!\n");
+    printf("  ✗ So khong hop le!\n");
     while ((c = getchar()) != '\n' && c != EOF)
       ;
     return;
@@ -91,11 +112,11 @@ static void run_single_method(void) {
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 
-  printf("\n  Đang chạy benchmark Linear Search với N=%d...\n", n);
+  printf("\n  Dang chay benchmark Linear Search voi N=%d...\n", n);
 
   DirEntry *entries = generate_random_entries(n);
   if (!entries) {
-    printf("  ✗ Lỗi cấp phát bộ nhớ!\n");
+    printf("  ✗ Loi cap phat bo nho!\n");
     return;
   }
 
@@ -103,10 +124,10 @@ static void run_single_method(void) {
   free(entries);
 
   // In format report
-  printf("\n  ═══ Kết quả ═══\n");
-  printf("  Phương pháp:        %s\n", result.method_name);
-  printf("  Số entries:         %d\n", result.num_entries);
-  printf("  Insert time:        %lu μs\n",
+  printf("\n  ═══ Ket qua ═══\n");
+  printf("  Phuong phap:        %s\n", result.method_name);
+  printf("  So entries:         %d\n", result.num_entries);
+  printf("  Insert time:        %lu us\n",
          (unsigned long)(result.insert_time_ns / 1000));
   printf("  Avg lookup (hit):   %lu ns\n",
          (unsigned long)result.avg_lookup_hit_ns);
@@ -115,6 +136,10 @@ static void run_single_method(void) {
   printf("  Avg comparisons:    %lu (hit), %lu (miss)\n",
          (unsigned long)result.avg_comparisons_hit,
          (unsigned long)result.avg_comparisons_miss);
+  printf("  Avg delete time:    %lu ns\n",
+         (unsigned long)result.avg_delete_time_ns);
+  printf("  Avg delete comp:    %lu\n",
+         (unsigned long)result.avg_delete_comparisons);
   printf("  Memory usage:       %lu KB\n",
          (unsigned long)(result.memory_usage_bytes / 1024));
 }
@@ -129,9 +154,9 @@ static void print_menu(void) {
   printf("║   Operating Systems Project                      ║\n");
   printf("╠══════════════════════════════════════════════════╣\n");
   printf("║                                                  ║\n");
-  printf("║   1. 🚀 Run full benchmark (Linear Search)       ║\n");
+  printf("║   1. 🚀 Run full benchmark (all operations)      ║\n");
   printf("║   2. 🔬 Run single benchmark                     ║\n");
-  printf("║   3. 🎮 Interactive demo                         ║\n");
+  printf("║   3. 🎮 Interactive demo (insert/lookup/delete)  ║\n");
   printf("║   4. 📊 View results summary                     ║\n");
   printf("║   5. 💾 Export results to CSV                     ║\n");
   printf("║   0. 🚪 Exit                                     ║\n");
@@ -167,7 +192,7 @@ int main(int argc, char *argv[]) {
 
     int choice;
     if (scanf("%d", &choice) != 1) {
-      printf("  ✗ Input không hợp lệ!\n");
+      printf("  ✗ Input khong hop le!\n");
       int c;
       while ((c = getchar()) != '\n' && c != EOF)
         ;
@@ -193,14 +218,14 @@ int main(int argc, char *argv[]) {
       break;
     case 4:
       if (g_result_count == 0) {
-        printf("\n  ⚠ Chưa có kết quả!\n");
+        printf("\n  ⚠ Chua co ket qua!\n");
       } else {
         print_results_table(g_results, g_result_count);
       }
       break;
     case 5:
       if (g_result_count == 0) {
-        printf("\n  ⚠ Chưa có kết quả!\n");
+        printf("\n  ⚠ Chua co ket qua!\n");
       } else {
         export_csv(g_results, g_result_count, "results/benchmark_results.csv");
       }
@@ -210,7 +235,7 @@ int main(int argc, char *argv[]) {
       running = 0;
       break;
     default:
-      printf("\n  ✗ Lựa chọn không hợp lệ!\n");
+      printf("\n  ✗ Lua chon khong hop le!\n");
       break;
     }
   }

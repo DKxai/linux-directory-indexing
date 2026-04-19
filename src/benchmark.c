@@ -13,8 +13,8 @@ const char *method_name(MethodType method) {
   }
 }
 
-// Function: benchmark_linear - Do lookup/insert performance cua array list
-// (O(n))
+// Function: benchmark_linear - Do insert/lookup/delete performance cua array
+// list (O(n))
 static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
   BenchmarkResult result;
   memset(&result, 0, sizeof(result));
@@ -23,6 +23,7 @@ static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
 
   TIMER_DECLARE();
 
+  // --- Benchmark INSERT ---
   TIMER_START();
   LinearDir *dir = linear_create();
   for (int i = 0; i < num_entries; i++) {
@@ -31,6 +32,7 @@ static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
   TIMER_END();
   result.insert_time_ns = TIMER_ELAPSED_NS();
 
+  // --- Benchmark LOOKUP HIT ---
   char **hits = generate_lookup_hits(entries, num_entries, NUM_LOOKUPS_HIT);
   uint64_t total_comp_hit = 0;
 
@@ -44,6 +46,7 @@ static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
   result.avg_lookup_hit_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_HIT;
   result.avg_comparisons_hit = total_comp_hit / NUM_LOOKUPS_HIT;
 
+  // --- Benchmark LOOKUP MISS ---
   char **misses = generate_lookup_misses(NUM_LOOKUPS_MISS);
   uint64_t total_comp_miss = 0;
 
@@ -57,10 +60,37 @@ static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
   result.avg_lookup_miss_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_MISS;
   result.avg_comparisons_miss = total_comp_miss / NUM_LOOKUPS_MISS;
 
+  // --- Ghi nhan Memory truoc khi delete ---
   result.memory_usage_bytes = linear_memory_usage(dir);
+
+  // --- Benchmark DELETE ---
+  // Tao mang rieng de test delete (rebuild dir de co du entries)
+  linear_destroy(dir);
+  dir = linear_create();
+  for (int i = 0; i < num_entries; i++) {
+    linear_insert(dir, &entries[i]);
+  }
+
+  int num_del = NUM_DELETES;
+  if (num_del > num_entries)
+    num_del = num_entries;
+  char **del_targets =
+      generate_delete_targets(entries, num_entries, num_del);
+  uint64_t total_del_comp = 0;
+
+  TIMER_START();
+  for (int i = 0; i < num_del; i++) {
+    uint64_t comp = 0;
+    linear_delete(dir, del_targets[i], &comp);
+    total_del_comp += comp;
+  }
+  TIMER_END();
+  result.avg_delete_time_ns = TIMER_ELAPSED_NS() / num_del;
+  result.avg_delete_comparisons = total_del_comp / num_del;
 
   free_lookup_targets(hits, NUM_LOOKUPS_HIT);
   free_lookup_targets(misses, NUM_LOOKUPS_MISS);
+  free_lookup_targets(del_targets, num_del);
   linear_destroy(dir);
 
   return result;
@@ -97,6 +127,7 @@ int run_all_benchmarks(BenchmarkResult *results, int max_results) {
   printf("\n");
   printf("  Lookups: %d hits + %d misses per test\n", NUM_LOOKUPS_HIT,
          NUM_LOOKUPS_MISS);
+  printf("  Deletes: %d per test\n", NUM_DELETES);
   print_separator();
 
   for (int s = 0; s < NUM_TEST_SIZES && count + METHOD_COUNT <= max_results;
@@ -117,9 +148,9 @@ int run_all_benchmarks(BenchmarkResult *results, int max_results) {
 
       results[count] = run_single_benchmark((MethodType)m, n, entries);
 
-      printf("done (lookup: %lu ns, %lu comparisons)\n",
+      printf("done (lookup: %lu ns, delete: %lu ns)\n",
              (unsigned long)results[count].avg_lookup_hit_ns,
-             (unsigned long)results[count].avg_comparisons_hit);
+             (unsigned long)results[count].avg_delete_time_ns);
       count++;
     }
 
@@ -134,29 +165,33 @@ int run_all_benchmarks(BenchmarkResult *results, int max_results) {
   return count;
 }
 
-// Function: print_results_table - Render giao dien
+// Function: print_results_table - Render giao dien co them delete metrics
 void print_results_table(const BenchmarkResult *results, int count) {
-  print_header("BENCHMARK RESULTS — Linear Search Baseline");
+  print_header("BENCHMARK RESULTS");
 
-  printf("%-15s %8s %12s %12s %12s %10s %10s %12s\n", "Method", "N",
-         "Insert(μs)", "Lookup(μs)", "Miss(μs)", "Comp(hit)", "Comp(miss)",
-         "Memory(KB)");
+  printf("%-15s %8s %12s %12s %12s %10s %10s %12s %10s %12s\n", "Method", "N",
+         "Insert(us)", "Lookup(ns)", "Miss(ns)", "Comp(hit)", "Comp(miss)",
+         "Delete(ns)", "Del Comp", "Memory(KB)");
   printf("─────────────── ──────── ──────────── ──────────── "
-         "──────────── ────────── ────────── ────────────\n");
+         "──────────── ────────── ────────── ──────────── ────────── "
+         "────────────\n");
 
   for (int i = 0; i < count; i++) {
     const BenchmarkResult *r = &results[i];
-    printf("%-15s %8d %12lu %12lu %12lu %10lu %10lu %12lu\n", r->method_name,
-           r->num_entries, (unsigned long)(r->insert_time_ns / 1000),
+    printf("%-15s %8d %12lu %12lu %12lu %10lu %10lu %12lu %10lu %12lu\n",
+           r->method_name, r->num_entries,
+           (unsigned long)(r->insert_time_ns / 1000),
            (unsigned long)r->avg_lookup_hit_ns,
            (unsigned long)r->avg_lookup_miss_ns,
            (unsigned long)r->avg_comparisons_hit,
            (unsigned long)r->avg_comparisons_miss,
+           (unsigned long)r->avg_delete_time_ns,
+           (unsigned long)r->avg_delete_comparisons,
            (unsigned long)(r->memory_usage_bytes / 1024));
   }
 }
 
-// Function: export_csv - Ghi header/data table xuong csv format
+// Function: export_csv - Ghi header/data table xuong csv format (co delete)
 int export_csv(const BenchmarkResult *results, int count,
                const char *filename) {
   FILE *fp = fopen(filename, "w");
@@ -167,16 +202,19 @@ int export_csv(const BenchmarkResult *results, int count,
 
   fprintf(fp, "method,num_entries,insert_time_ns,avg_lookup_hit_ns,"
               "avg_lookup_miss_ns,avg_comparisons_hit,avg_comparisons_miss,"
+              "avg_delete_time_ns,avg_delete_comparisons,"
               "memory_usage_bytes\n");
 
   for (int i = 0; i < count; i++) {
     const BenchmarkResult *r = &results[i];
-    fprintf(fp, "%s,%d,%lu,%lu,%lu,%lu,%lu,%lu\n", r->method_name,
+    fprintf(fp, "%s,%d,%lu,%lu,%lu,%lu,%lu,%lu,%lu,%lu\n", r->method_name,
             r->num_entries, (unsigned long)r->insert_time_ns,
             (unsigned long)r->avg_lookup_hit_ns,
             (unsigned long)r->avg_lookup_miss_ns,
             (unsigned long)r->avg_comparisons_hit,
             (unsigned long)r->avg_comparisons_miss,
+            (unsigned long)r->avg_delete_time_ns,
+            (unsigned long)r->avg_delete_comparisons,
             (unsigned long)r->memory_usage_bytes);
   }
 
