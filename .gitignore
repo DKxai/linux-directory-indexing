@@ -1,0 +1,24 @@
+# Build artifacts
+obj/
+benchmark
+*.o
+*.out
+
+# IDE configs
+.clangd
+compile_commands.json
+pyrightconfig.json
+.vscode/
+.idea/
+
+# Results (regenerable)
+results/*.png
+results/*.txt
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python cache
+__pycache__/
+*.pyc
