@@ -95,6 +95,17 @@ linux-directory-indexing/
 | 100,000 | ~220,156 | ~50,077 | ~623,296 | ~99,750 | 33,792 |
 | 1,000,000 | ~5,332,360 | ~494,913 | ~10,906,672 | ~999,750 | 270,336 |
 
+### 🛡️ Kiểm tra bộ nhớ (Memory Safety)
+Kết quả chạy Valgrind xác nhận chương trình không có lỗi quản lý bộ nhớ:
+```text
+== HEAP SUMMARY:
+==     in use at exit: 0 bytes in 0 blocks
+==   total heap usage: 14,199 allocs, 14,199 frees, 2,336,214,521 bytes allocated
+==
+== All heap blocks were freed -- no leaks are possible
+== ERROR SUMMARY: 0 errors from 0 contexts
+```
+
 ### Nhận xét
 - ✅ **Lookup O(n)**: comparisons trung bình ≈ N/2, thời gian tăng tuyến tính
 - ✅ **Delete O(n)**: comparisons trung bình ≈ N (worst case quét hết mảng)
