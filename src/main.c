@@ -4,6 +4,7 @@
 #include "common.h"
 #include "dir_entry.h"
 #include "linear_search.h"
+#include "hash_table.h"
 
 #define MAX_RESULTS (NUM_TEST_SIZES * METHOD_COUNT)
 
@@ -12,7 +13,7 @@ static int g_result_count = 0;
 
 // run_interactive_demo - Hien thi command line interactive demo
 static void run_interactive_demo(void) {
-  print_header("INTERACTIVE DEMO — Linear Search");
+  print_header("INTERACTIVE DEMO — Linear Search vs Hash Table");
 
   printf("  Nhap so entries de demo (khuyen nghi 10-1000): ");
   int n;
@@ -38,16 +39,25 @@ static void run_interactive_demo(void) {
     print_dir_entry(&entries[i]);
   }
 
+  // === TAO CA HAI CAU TRUC ===
   printf("\n  Dang tao Linear Search directory...\n");
-
   LinearDir *lin_dir = linear_create();
+  printf("  Dang tao Hash Table...\n");
+  HashTable *ht = hash_create();
 
   TIMER_DECLARE();
 
+  // Insert vao Linear
   for (int i = 0; i < n; i++) {
     linear_insert(lin_dir, &entries[i]);
   }
-  printf("  ✓ Da insert %d entries vao Linear Search directory\n\n", n);
+  printf("  ✓ Da insert %d entries vao Linear Search directory\n", n);
+
+  // Insert vao Hash Table
+  for (int i = 0; i < n; i++) {
+    hash_insert(ht, &entries[i]);
+  }
+  printf("  ✓ Da insert %d entries vao Hash Table\n\n", n);
 
   // --- Demo LOOKUP ---
   const char *search_name = entries[n / 2].name;
@@ -56,12 +66,22 @@ static void run_interactive_demo(void) {
 
   uint64_t comp;
 
+  // Lookup Linear
   TIMER_START();
   comp = 0;
-  DirEntry *found = linear_lookup(lin_dir, search_name, &comp);
+  DirEntry *found_lin = linear_lookup(lin_dir, search_name, &comp);
   TIMER_END();
   printf("  Linear Search:  %s | %lu comparisons | %lu ns\n",
-         found ? "FOUND" : "NOT FOUND", (unsigned long)comp,
+         found_lin ? "FOUND" : "NOT FOUND", (unsigned long)comp,
+         (unsigned long)TIMER_ELAPSED_NS());
+
+  // Lookup Hash
+  TIMER_START();
+  comp = 0;
+  DirEntry *found_hash = hash_lookup(ht, search_name, &comp);
+  TIMER_END();
+  printf("  Hash Table:     %s | %lu comparisons | %lu ns\n",
+         found_hash ? "FOUND" : "NOT FOUND", (unsigned long)comp,
          (unsigned long)TIMER_ELAPSED_NS());
 
   // --- Demo DELETE ---
@@ -69,40 +89,77 @@ static void run_interactive_demo(void) {
   printf("\n  Demo delete: \"%s\"\n", delete_name);
   printf("  ─────────────────────────────────────────────\n");
 
+  // Delete Linear
   TIMER_START();
   comp = 0;
-  int del_result = linear_delete(lin_dir, delete_name, &comp);
+  int del_result_lin = linear_delete(lin_dir, delete_name, &comp);
   TIMER_END();
   printf("  Linear Delete:  %s | %lu comparisons | %lu ns\n",
-         del_result == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
+         del_result_lin == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
+         (unsigned long)TIMER_ELAPSED_NS());
+
+  // Delete Hash
+  TIMER_START();
+  comp = 0;
+  int del_result_hash = hash_delete(ht, delete_name, &comp);
+  TIMER_END();
+  printf("  Hash Delete:    %s | %lu comparisons | %lu ns\n",
+         del_result_hash == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
          (unsigned long)TIMER_ELAPSED_NS());
 
   // Verify delete
   comp = 0;
-  DirEntry *verify = linear_lookup(lin_dir, delete_name, &comp);
-  printf("  Verify lookup:  %s (sau khi delete)\n",
-         verify ? "FOUND (LOI!)" : "NOT FOUND (dung)");
+  DirEntry *verify_lin = linear_lookup(lin_dir, delete_name, &comp);
+  printf("\n  Verify Linear:  %s (sau khi delete)\n",
+         verify_lin ? "FOUND (LOI!)" : "NOT FOUND (dung)");
+
+  comp = 0;
+  DirEntry *verify_hash = hash_lookup(ht, delete_name, &comp);
+  printf("  Verify Hash:    %s (sau khi delete)\n",
+         verify_hash ? "FOUND (LOI!)" : "NOT FOUND (dung)");
 
   printf("\n  Memory Usage:\n");
   printf("  ─────────────────────────────────────────────\n");
   printf("  Linear Search:  %zu KB\n", linear_memory_usage(lin_dir) / 1024);
-  printf("  Entries count:  %d (truoc: %d, da xoa: 1)\n", lin_dir->count, n);
+  printf("  Hash Table:     %zu KB\n", hash_memory_usage(ht) / 1024);
+  printf("  Entries count:  Linear=%d, Hash=%d (da xoa 1 moi ben)\n",
+         lin_dir->count, ht->count);
+
+  // In Hash Table stats
+  printf("\n");
+  hash_stats(ht);
 
   linear_destroy(lin_dir);
+  hash_destroy(ht);
   free(entries);
 
   printf("\n  ✓ Demo hoan tat!\n");
 }
 
-// run_single_method - Test input so luong chi chay cho method 1
+// run_single_method - Test input so luong cho 1 method duoc chon
 static void run_single_method(void) {
   print_header("SINGLE METHOD BENCHMARK");
 
-  printf("  Hien tai chi co Linear Search.\n");
+  printf("  Chon phuong phap:\n");
+  printf("    1. Linear Search\n");
+  printf("    2. Hash Table\n");
+  printf("  Lua chon: ");
+
+  int method_choice;
+  int c;
+  if (scanf("%d", &method_choice) != 1 || method_choice < 1 || method_choice > 2) {
+    printf("  ✗ Lua chon khong hop le!\n");
+    while ((c = getchar()) != '\n' && c != EOF)
+      ;
+    return;
+  }
+  while ((c = getchar()) != '\n' && c != EOF)
+    ;
+
+  MethodType selected = (method_choice == 1) ? METHOD_LINEAR : METHOD_HASH;
 
   printf("  Nhap so entries (100-1000000): ");
   int n;
-  int c;
   if (scanf("%d", &n) != 1 || n <= 0 || n > 1000000) {
     printf("  ✗ So khong hop le!\n");
     while ((c = getchar()) != '\n' && c != EOF)
@@ -112,7 +169,7 @@ static void run_single_method(void) {
   while ((c = getchar()) != '\n' && c != EOF)
     ;
 
-  printf("\n  Dang chay benchmark Linear Search voi N=%d...\n", n);
+  printf("\n  Dang chay benchmark %s voi N=%d...\n", method_name(selected), n);
 
   DirEntry *entries = generate_random_entries(n);
   if (!entries) {
@@ -120,7 +177,7 @@ static void run_single_method(void) {
     return;
   }
 
-  BenchmarkResult result = run_single_benchmark(METHOD_LINEAR, n, entries);
+  BenchmarkResult result = run_single_benchmark(selected, n, entries);
   free(entries);
 
   // In format report
@@ -149,14 +206,14 @@ static void print_menu(void) {
   printf("\n");
   printf("╔══════════════════════════════════════════════════╗\n");
   printf("║   Directory Lookup Performance Benchmark         ║\n");
-  printf("║   Week 3: Linear Search Baseline                 ║\n");
+  printf("║   Week 4: Linear Search + Hash Table             ║\n");
   printf("║   ─────────────────────────────────────────      ║\n");
   printf("║   Operating Systems Project                      ║\n");
   printf("╠══════════════════════════════════════════════════╣\n");
   printf("║                                                  ║\n");
-  printf("║   1. 🚀 Run full benchmark (all operations)      ║\n");
-  printf("║   2. 🔬 Run single benchmark                     ║\n");
-  printf("║   3. 🎮 Interactive demo (insert/lookup/delete)  ║\n");
+  printf("║   1. 🚀 Run full benchmark (all methods)         ║\n");
+  printf("║   2. 🔬 Run single method benchmark              ║\n");
+  printf("║   3. 🎮 Interactive demo (Linear vs Hash)        ║\n");
   printf("║   4. 📊 View results summary                     ║\n");
   printf("║   5. 💾 Export results to CSV                     ║\n");
   printf("║   0. 🚪 Exit                                     ║\n");

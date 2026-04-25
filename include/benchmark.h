@@ -6,9 +6,10 @@
 #include "common.h"
 #include "dir_entry.h"
 
-// MethodType - Enum xac dinh loai thuat toan (Linear, Hash...)
+// MethodType - Enum xac dinh loai thuat toan
 typedef enum {
     METHOD_LINEAR = 0,
+    METHOD_HASH,
     METHOD_COUNT 
 } MethodType;
 
