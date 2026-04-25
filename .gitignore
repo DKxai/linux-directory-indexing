@@ -10,6 +10,7 @@ compile_commands.json
 pyrightconfig.json
 .vscode/
 .idea/
+.vs/
 
 # Results (regenerable)
 results/*.png
