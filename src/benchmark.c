@@ -2,12 +2,15 @@
 
 #include "benchmark.h"
 #include "linear_search.h"
+#include "hash_table.h"
 
 // Function: method_name - Chuyen enum method thanh ten text
 const char *method_name(MethodType method) {
   switch (method) {
   case METHOD_LINEAR:
     return "Linear Search";
+  case METHOD_HASH:
+    return "Hash Table";
   default:
     return "Unknown";
   }
@@ -96,6 +99,89 @@ static BenchmarkResult benchmark_linear(int num_entries, DirEntry *entries) {
   return result;
 }
 
+// Function: benchmark_hash - Do insert/lookup/delete performance cua Hash Table
+// (O(1) average)
+static BenchmarkResult benchmark_hash(int num_entries, DirEntry *entries) {
+  BenchmarkResult result;
+  memset(&result, 0, sizeof(result));
+  strncpy(result.method_name, "Hash Table", MAX_METHOD_NAME - 1);
+  result.num_entries = num_entries;
+
+  TIMER_DECLARE();
+
+  // --- Benchmark INSERT ---
+  TIMER_START();
+  HashTable *ht = hash_create();
+  for (int i = 0; i < num_entries; i++) {
+    hash_insert(ht, &entries[i]);
+  }
+  TIMER_END();
+  result.insert_time_ns = TIMER_ELAPSED_NS();
+
+  // --- Benchmark LOOKUP HIT ---
+  char **hits = generate_lookup_hits(entries, num_entries, NUM_LOOKUPS_HIT);
+  uint64_t total_comp_hit = 0;
+
+  TIMER_START();
+  for (int i = 0; i < NUM_LOOKUPS_HIT; i++) {
+    uint64_t comp = 0;
+    hash_lookup(ht, hits[i], &comp);
+    total_comp_hit += comp;
+  }
+  TIMER_END();
+  result.avg_lookup_hit_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_HIT;
+  result.avg_comparisons_hit = total_comp_hit / NUM_LOOKUPS_HIT;
+
+  // --- Benchmark LOOKUP MISS ---
+  char **misses = generate_lookup_misses(NUM_LOOKUPS_MISS);
+  uint64_t total_comp_miss = 0;
+
+  TIMER_START();
+  for (int i = 0; i < NUM_LOOKUPS_MISS; i++) {
+    uint64_t comp = 0;
+    hash_lookup(ht, misses[i], &comp);
+    total_comp_miss += comp;
+  }
+  TIMER_END();
+  result.avg_lookup_miss_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_MISS;
+  result.avg_comparisons_miss = total_comp_miss / NUM_LOOKUPS_MISS;
+
+  // --- Ghi nhan Memory truoc khi delete ---
+  result.memory_usage_bytes = hash_memory_usage(ht);
+
+  // --- Benchmark DELETE ---
+  // Rebuild hash table de co du entries cho delete test
+  hash_destroy(ht);
+  ht = hash_create();
+  for (int i = 0; i < num_entries; i++) {
+    hash_insert(ht, &entries[i]);
+  }
+
+  int num_del = NUM_DELETES;
+  if (num_del > num_entries)
+    num_del = num_entries;
+  char **del_targets =
+      generate_delete_targets(entries, num_entries, num_del);
+  uint64_t total_del_comp = 0;
+
+  TIMER_START();
+  for (int i = 0; i < num_del; i++) {
+    uint64_t comp = 0;
+    hash_delete(ht, del_targets[i], &comp);
+    total_del_comp += comp;
+  }
+  TIMER_END();
+  result.avg_delete_time_ns = TIMER_ELAPSED_NS() / num_del;
+  result.avg_delete_comparisons = total_del_comp / num_del;
+
+  free_lookup_targets(hits, NUM_LOOKUPS_HIT);
+  free_lookup_targets(misses, NUM_LOOKUPS_MISS);
+  free_lookup_targets(del_targets, num_del);
+  hash_destroy(ht);
+
+  return result;
+}
+
 // Function: run_single_benchmark - Router chay dung thuat toan theo method dinh
 // danh
 BenchmarkResult run_single_benchmark(MethodType method, int num_entries,
@@ -103,6 +189,8 @@ BenchmarkResult run_single_benchmark(MethodType method, int num_entries,
   switch (method) {
   case METHOD_LINEAR:
     return benchmark_linear(num_entries, entries);
+  case METHOD_HASH:
+    return benchmark_hash(num_entries, entries);
   default: {
     BenchmarkResult empty;
     memset(&empty, 0, sizeof(empty));
@@ -117,7 +205,7 @@ int run_all_benchmarks(BenchmarkResult *results, int max_results) {
 
   printf("\n");
   print_header("RUNNING FULL BENCHMARK");
-  printf("  Methods: Linear Search\n");
+  printf("  Methods: Linear Search, Hash Table\n");
   printf("  Sizes:   ");
   for (int i = 0; i < NUM_TEST_SIZES; i++) {
     printf("%d", TEST_SIZES[i]);
