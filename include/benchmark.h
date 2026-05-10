@@ -10,6 +10,7 @@
 typedef enum {
     METHOD_LINEAR = 0,
     METHOD_HASH,
+    METHOD_BTREE,
     METHOD_COUNT 
 } MethodType;
 

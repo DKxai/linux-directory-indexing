@@ -1,6 +1,6 @@
 # ============================================================
 # Makefile - Directory Lookup Performance Benchmark
-# Week 4: Hash Table (+ Linear Search Baseline)
+# Week 5: B-Tree (+ Linear Search + Hash Table)
 # ============================================================
 # Usage:
 #   make            - Build the benchmark program
@@ -20,13 +20,13 @@ INC_DIR  = include
 OBJ_DIR  = obj
 BIN_DIR  = .
 
-# Source files (Tuan 4: Linear Search + Hash Table)
+# Source files (Tuan 5: Linear Search + Hash Table + B-Tree)
 SRCS     = $(SRC_DIR)/main.c \
            $(SRC_DIR)/dir_entry.c \
            $(SRC_DIR)/linear_search.c \
            $(SRC_DIR)/hash_table.c \
+           $(SRC_DIR)/btree.c \
            $(SRC_DIR)/benchmark.c
-# TODO Tuan 5: them $(SRC_DIR)/btree.c
 # TODO Tuan 6: them $(SRC_DIR)/htree.c
 
 # Object files

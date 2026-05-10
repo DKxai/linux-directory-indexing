@@ -3,6 +3,7 @@
 #include "benchmark.h"
 #include "linear_search.h"
 #include "hash_table.h"
+#include "btree.h"
 
 // Function: method_name - Chuyen enum method thanh ten text
 const char *method_name(MethodType method) {
@@ -11,6 +12,8 @@ const char *method_name(MethodType method) {
     return "Linear Search";
   case METHOD_HASH:
     return "Hash Table";
+  case METHOD_BTREE:
+    return "B-Tree";
   default:
     return "Unknown";
   }
@@ -182,6 +185,88 @@ static BenchmarkResult benchmark_hash(int num_entries, DirEntry *entries) {
   return result;
 }
 
+// Function: benchmark_btree - Do insert/lookup/delete performance cua B-Tree
+// (O(log n))
+static BenchmarkResult benchmark_btree(int num_entries, DirEntry *entries) {
+  BenchmarkResult result;
+  memset(&result, 0, sizeof(result));
+  strncpy(result.method_name, "B-Tree", MAX_METHOD_NAME - 1);
+  result.num_entries = num_entries;
+
+  TIMER_DECLARE();
+
+  // --- Benchmark INSERT ---
+  TIMER_START();
+  BTree *bt = btree_create();
+  for (int i = 0; i < num_entries; i++) {
+    btree_insert(bt, &entries[i]);
+  }
+  TIMER_END();
+  result.insert_time_ns = TIMER_ELAPSED_NS();
+
+  // --- Benchmark LOOKUP HIT ---
+  char **hits = generate_lookup_hits(entries, num_entries, NUM_LOOKUPS_HIT);
+  uint64_t total_comp_hit = 0;
+
+  TIMER_START();
+  for (int i = 0; i < NUM_LOOKUPS_HIT; i++) {
+    uint64_t comp = 0;
+    btree_lookup(bt, hits[i], &comp);
+    total_comp_hit += comp;
+  }
+  TIMER_END();
+  result.avg_lookup_hit_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_HIT;
+  result.avg_comparisons_hit = total_comp_hit / NUM_LOOKUPS_HIT;
+
+  // --- Benchmark LOOKUP MISS ---
+  char **misses = generate_lookup_misses(NUM_LOOKUPS_MISS);
+  uint64_t total_comp_miss = 0;
+
+  TIMER_START();
+  for (int i = 0; i < NUM_LOOKUPS_MISS; i++) {
+    uint64_t comp = 0;
+    btree_lookup(bt, misses[i], &comp);
+    total_comp_miss += comp;
+  }
+  TIMER_END();
+  result.avg_lookup_miss_ns = TIMER_ELAPSED_NS() / NUM_LOOKUPS_MISS;
+  result.avg_comparisons_miss = total_comp_miss / NUM_LOOKUPS_MISS;
+
+  // --- Ghi nhan Memory truoc khi delete ---
+  result.memory_usage_bytes = btree_memory_usage(bt);
+
+  // --- Benchmark DELETE ---
+  btree_destroy(bt);
+  bt = btree_create();
+  for (int i = 0; i < num_entries; i++) {
+    btree_insert(bt, &entries[i]);
+  }
+
+  int num_del = NUM_DELETES;
+  if (num_del > num_entries)
+    num_del = num_entries;
+  char **del_targets =
+      generate_delete_targets(entries, num_entries, num_del);
+  uint64_t total_del_comp = 0;
+
+  TIMER_START();
+  for (int i = 0; i < num_del; i++) {
+    uint64_t comp = 0;
+    btree_delete(bt, del_targets[i], &comp);
+    total_del_comp += comp;
+  }
+  TIMER_END();
+  result.avg_delete_time_ns = TIMER_ELAPSED_NS() / num_del;
+  result.avg_delete_comparisons = total_del_comp / num_del;
+
+  free_lookup_targets(hits, NUM_LOOKUPS_HIT);
+  free_lookup_targets(misses, NUM_LOOKUPS_MISS);
+  free_lookup_targets(del_targets, num_del);
+  btree_destroy(bt);
+
+  return result;
+}
+
 // Function: run_single_benchmark - Router chay dung thuat toan theo method dinh
 // danh
 BenchmarkResult run_single_benchmark(MethodType method, int num_entries,
@@ -191,6 +276,8 @@ BenchmarkResult run_single_benchmark(MethodType method, int num_entries,
     return benchmark_linear(num_entries, entries);
   case METHOD_HASH:
     return benchmark_hash(num_entries, entries);
+  case METHOD_BTREE:
+    return benchmark_btree(num_entries, entries);
   default: {
     BenchmarkResult empty;
     memset(&empty, 0, sizeof(empty));
@@ -205,7 +292,7 @@ int run_all_benchmarks(BenchmarkResult *results, int max_results) {
 
   printf("\n");
   print_header("RUNNING FULL BENCHMARK");
-  printf("  Methods: Linear Search, Hash Table\n");
+  printf("  Methods: Linear Search, Hash Table, B-Tree\n");
   printf("  Sizes:   ");
   for (int i = 0; i < NUM_TEST_SIZES; i++) {
     printf("%d", TEST_SIZES[i]);
