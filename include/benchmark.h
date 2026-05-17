@@ -11,6 +11,7 @@ typedef enum {
     METHOD_LINEAR = 0,
     METHOD_HASH,
     METHOD_BTREE,
+    METHOD_HTREE,
     METHOD_COUNT 
 } MethodType;
 

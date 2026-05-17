@@ -6,6 +6,7 @@
 #include "linear_search.h"
 #include "hash_table.h"
 #include "btree.h"
+#include "htree.h"
 
 #define MAX_RESULTS (NUM_TEST_SIZES * METHOD_COUNT)
 
@@ -14,7 +15,7 @@ static int g_result_count = 0;
 
 // run_interactive_demo - Hien thi command line interactive demo
 static void run_interactive_demo(void) {
-  print_header("INTERACTIVE DEMO — Linear Search vs Hash Table vs B-Tree");
+  print_header("INTERACTIVE DEMO — Linear vs Hash vs B-Tree vs HTree");
 
   printf("  Nhap so entries de demo (khuyen nghi 10-1000): ");
   int n;
@@ -40,13 +41,15 @@ static void run_interactive_demo(void) {
     print_dir_entry(&entries[i]);
   }
 
-  // === TAO CA 3 CAU TRUC ===
+  // === TAO CA 4 CAU TRUC ===
   printf("\n  Dang tao Linear Search directory...\n");
   LinearDir *lin_dir = linear_create();
   printf("  Dang tao Hash Table...\n");
   HashTable *ht = hash_create();
   printf("  Dang tao B-Tree...\n");
   BTree *bt = btree_create();
+  printf("  Dang tao HTree (ext4)...\n");
+  HTree *htree = htree_create();
 
   TIMER_DECLARE();
 
@@ -66,7 +69,13 @@ static void run_interactive_demo(void) {
   for (int i = 0; i < n; i++) {
     btree_insert(bt, &entries[i]);
   }
-  printf("  ✓ Da insert %d entries vao B-Tree\n\n", n);
+  printf("  ✓ Da insert %d entries vao B-Tree\n", n);
+
+  // Insert vao HTree
+  for (int i = 0; i < n; i++) {
+    htree_insert(htree, &entries[i]);
+  }
+  printf("  ✓ Da insert %d entries vao HTree\n\n", n);
 
   // --- Demo LOOKUP ---
   const char *search_name = entries[n / 2].name;
@@ -102,6 +111,15 @@ static void run_interactive_demo(void) {
          found_bt ? "FOUND" : "NOT FOUND", (unsigned long)comp,
          (unsigned long)TIMER_ELAPSED_NS());
 
+  // Lookup HTree
+  TIMER_START();
+  comp = 0;
+  DirEntry *found_ht = htree_lookup(htree, search_name, &comp);
+  TIMER_END();
+  printf("  HTree:          %s | %lu comparisons | %lu ns\n",
+         found_ht ? "FOUND" : "NOT FOUND", (unsigned long)comp,
+         (unsigned long)TIMER_ELAPSED_NS());
+
   // --- Demo DELETE ---
   const char *delete_name = entries[n / 4].name;
   printf("\n  Demo delete: \"%s\"\n", delete_name);
@@ -134,6 +152,15 @@ static void run_interactive_demo(void) {
          del_result_bt == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
          (unsigned long)TIMER_ELAPSED_NS());
 
+  // Delete HTree
+  TIMER_START();
+  comp = 0;
+  int del_result_htree = htree_delete(htree, delete_name, &comp);
+  TIMER_END();
+  printf("  HTree Delete:   %s | %lu comparisons | %lu ns\n",
+         del_result_htree == 0 ? "DELETED" : "NOT FOUND", (unsigned long)comp,
+         (unsigned long)TIMER_ELAPSED_NS());
+
   // Verify delete
   comp = 0;
   DirEntry *verify_lin = linear_lookup(lin_dir, delete_name, &comp);
@@ -150,23 +177,32 @@ static void run_interactive_demo(void) {
   printf("  Verify B-Tree:  %s (sau khi delete)\n",
          verify_bt ? "FOUND (LOI!)" : "NOT FOUND (dung)");
 
+  comp = 0;
+  DirEntry *verify_ht = htree_lookup(htree, delete_name, &comp);
+  printf("  Verify HTree:   %s (sau khi delete)\n",
+         verify_ht ? "FOUND (LOI!)" : "NOT FOUND (dung)");
+
   printf("\n  Memory Usage:\n");
   printf("  ─────────────────────────────────────────────\n");
   printf("  Linear Search:  %zu KB\n", linear_memory_usage(lin_dir) / 1024);
   printf("  Hash Table:     %zu KB\n", hash_memory_usage(ht) / 1024);
   printf("  B-Tree:         %zu KB\n", btree_memory_usage(bt) / 1024);
-  printf("  Entries count:  Linear=%d, Hash=%d, B-Tree=%d (da xoa 1 moi ben)\n",
-         lin_dir->count, ht->count, bt->count);
+  printf("  HTree:          %zu KB\n", htree_memory_usage(htree) / 1024);
+  printf("  Entries count:  Linear=%d, Hash=%d, B-Tree=%d, HTree=%d (da xoa 1 moi ben)\n",
+         lin_dir->count, ht->count, bt->count, htree->count);
 
   // In stats
   printf("\n");
   hash_stats(ht);
   printf("\n");
   btree_stats(bt);
+  printf("\n");
+  htree_stats(htree);
 
   linear_destroy(lin_dir);
   hash_destroy(ht);
   btree_destroy(bt);
+  htree_destroy(htree);
   free(entries);
 
   printf("\n  ✓ Demo hoan tat!\n");
@@ -180,11 +216,12 @@ static void run_single_method(void) {
   printf("    1. Linear Search\n");
   printf("    2. Hash Table\n");
   printf("    3. B-Tree\n");
+  printf("    4. HTree (ext4)\n");
   printf("  Lua chon: ");
 
   int method_choice;
   int c;
-  if (scanf("%d", &method_choice) != 1 || method_choice < 1 || method_choice > 3) {
+  if (scanf("%d", &method_choice) != 1 || method_choice < 1 || method_choice > 4) {
     printf("  ✗ Lua chon khong hop le!\n");
     while ((c = getchar()) != '\n' && c != EOF)
       ;
@@ -196,7 +233,8 @@ static void run_single_method(void) {
   MethodType selected;
   if (method_choice == 1) selected = METHOD_LINEAR;
   else if (method_choice == 2) selected = METHOD_HASH;
-  else selected = METHOD_BTREE;
+  else if (method_choice == 3) selected = METHOD_BTREE;
+  else selected = METHOD_HTREE;
 
   printf("  Nhap so entries (100-1000000): ");
   int n;
@@ -246,14 +284,14 @@ static void print_menu(void) {
   printf("\n");
   printf("╔══════════════════════════════════════════════════════════╗\n");
   printf("║   Directory Lookup Performance Benchmark                 ║\n");
-  printf("║   Week 5: Linear Search + Hash Table + B-Tree            ║\n");
+  printf("║   Week 6: Linear + Hash + B-Tree + HTree (ext4)         ║\n");
   printf("║   ─────────────────────────────────────────              ║\n");
   printf("║   Operating Systems Project                              ║\n");
   printf("╠══════════════════════════════════════════════════════════╣\n");
   printf("║                                                          ║\n");
-  printf("║   1. 🚀 Run full benchmark (all methods)                 ║\n");
+  printf("║   1. 🚀 Run full benchmark (all 4 methods)               ║\n");
   printf("║   2. 🔬 Run single method benchmark                      ║\n");
-  printf("║   3. 🎮 Interactive demo (Linear vs Hash vs B-Tree)      ║\n");
+  printf("║   3. 🎮 Interactive demo (Linear/Hash/B-Tree/HTree)     ║\n");
   printf("║   4. 📊 View results summary                             ║\n");
   printf("║   5. 💾 Export results to CSV                             ║\n");
   printf("║   0. 🚪 Exit                                             ║\n");
