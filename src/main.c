@@ -279,25 +279,50 @@ static void run_single_method(void) {
          (unsigned long)(result.memory_usage_bytes / 1024));
 }
 
+// ANSI color codes
+#define C_RESET   "\033[0m"
+#define C_BOLD    "\033[1m"
+#define C_DIM     "\033[2m"
+#define C_CYAN    "\033[36m"
+#define C_GREEN   "\033[32m"
+#define C_YELLOW  "\033[33m"
+#define C_RED     "\033[31m"
+#define C_BLUE    "\033[34m"
+#define C_MAGENTA "\033[35m"
+#define C_WHITE   "\033[97m"
+#define C_BG_DARK "\033[48;5;235m"
+#define C_ORANGE  "\033[38;5;208m"
+#define C_GRAY    "\033[38;5;245m"
+
 // print_menu - Render Option
 static void print_menu(void) {
   printf("\n");
-  printf("╔══════════════════════════════════════════════════════════╗\n");
-  printf("║   Directory Lookup Performance Benchmark                 ║\n");
-  printf("║   Week 7: Linear + Hash + B-Tree + HTree (ext4)         ║\n");
-  printf("║   ─────────────────────────────────────────              ║\n");
-  printf("║   Operating Systems Project                              ║\n");
-  printf("╠══════════════════════════════════════════════════════════╣\n");
-  printf("║                                                          ║\n");
-  printf("║   1. 🚀 Run full benchmark (all 4 methods)               ║\n");
-  printf("║   2. 🔬 Run single method benchmark                      ║\n");
-  printf("║   3. 🎮 Interactive demo (Linear/Hash/B-Tree/HTree)     ║\n");
-  printf("║   4. 📊 View results summary                             ║\n");
-  printf("║   5. 💾 Export results to CSV                             ║\n");
-  printf("║   0. 🚪 Exit                                             ║\n");
-  printf("║                                                          ║\n");
-  printf("╚══════════════════════════════════════════════════════════╝\n");
-  printf("  Your choice: ");
+  printf(C_CYAN C_BOLD);
+  printf("  ┌──────────────────────────────────────────────────────────┐\n");
+  printf("  │                                                          │\n");
+  printf("  │   ██████╗ ██╗██████╗     ██╗      ██████╗  ██████╗ ██╗  │\n");
+  printf("  │   ██╔══██╗██║██╔══██╗    ██║     ██╔═══██╗██╔═══██╗██║  │\n");
+  printf("  │   ██║  ██║██║██████╔╝    ██║     ██║   ██║██║   ██║██║  │\n");
+  printf("  │   ██║  ██║██║██╔══██╗    ██║     ██║   ██║██║   ██║██║  │\n");
+  printf("  │   ██████╔╝██║██║  ██║    ███████╗╚██████╔╝╚██████╔╝██║  │\n");
+  printf("  │   ╚═════╝ ╚═╝╚═╝  ╚═╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  │\n");
+  printf("  │                                                          │\n");
+  printf(C_RESET);
+  printf(C_WHITE "  │" C_RESET "   " C_BOLD "Directory Lookup Performance Benchmark" C_RESET "          " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_DIM "Week 7  •  Operating Systems Project" C_RESET "            " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_DIM "Linear • Hash • B-Tree • HTree (ext4)" C_RESET "          " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │                                                          │" C_RESET "\n");
+  printf(C_CYAN "  ├──────────────────────────────────────────────────────────┤" C_RESET "\n");
+  printf(C_WHITE "  │                                                          │" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_GREEN C_BOLD "[1]" C_RESET " 🚀 Run full benchmark " C_DIM "(all 4 methods)" C_RESET "        " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_BLUE C_BOLD "[2]" C_RESET " 🔬 Run single method benchmark" C_RESET "               " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_MAGENTA C_BOLD "[3]" C_RESET " 🎮 Interactive demo " C_DIM "(compare live)" C_RESET "         " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_ORANGE C_BOLD "[4]" C_RESET " 📊 View results summary" C_RESET "                     " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_YELLOW C_BOLD "[5]" C_RESET " 💾 Export results to CSV" C_RESET "                    " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_RED C_BOLD "[0]" C_RESET " 🚪 Exit" C_RESET "                                     " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │                                                          │" C_RESET "\n");
+  printf(C_CYAN "  └──────────────────────────────────────────────────────────┘" C_RESET "\n");
+  printf("\n  " C_CYAN C_BOLD "▸" C_RESET " Your choice: ");
 }
 
 // main - Router cac dieu huong menu va parse c-arguments
