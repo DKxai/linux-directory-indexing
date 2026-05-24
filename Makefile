@@ -1,6 +1,6 @@
 # ============================================================
 # Makefile - Directory Lookup Performance Benchmark
-# Week 6: HTree (+ Linear Search + Hash Table + B-Tree)
+# Week 7: Benchmark + Visualization (Linear + Hash + B-Tree + HTree)
 # ============================================================
 # Usage:
 #   make            - Build the benchmark program
@@ -39,7 +39,7 @@ TARGET   = $(BIN_DIR)/benchmark
 # Build rules
 # ============================================================
 
-.PHONY: all clean run demo valgrind help
+.PHONY: all clean run demo valgrind plot visualize help
 
 all: $(TARGET)
 	@echo ""
@@ -73,6 +73,12 @@ valgrind: $(TARGET)
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
 		./$(TARGET) --full
 
+plot:
+	@echo "Generating visualization charts..."
+	./scripts/visualize.py
+
+visualize: plot
+
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 	@echo "  ✓ Cleaned!"
@@ -83,4 +89,6 @@ help:
 	@echo "  make run      - Build and run full benchmark"
 	@echo "  make demo     - Build and run interactive mode"
 	@echo "  make valgrind - Check for memory leaks"
+	@echo "  make plot     - Generate performance visualization charts"
 	@echo "  make clean    - Remove build artifacts"
+

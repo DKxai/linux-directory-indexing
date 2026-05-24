@@ -7,7 +7,7 @@
 
 Chương trình mô phỏng cách filesystem quản lý directory entries và đo hiệu năng các operations: **insert**, **lookup**, và **delete**.
 
-### Tiến độ hiện tại: Tuần 6 — HTree (ext4)
+### Tiến độ hiện tại: Tuần 7 — Benchmark + Visualization
 
 | Tuần | Nội dung | Trạng thái |
 |------|----------|-----------| 
@@ -15,7 +15,7 @@ Chương trình mô phỏng cách filesystem quản lý directory entries và đ
 | 4 | Hash Table (djb2 + Separate Chaining + Rehash) | ✅ Hoàn thành |
 | 5 | B-Tree (proactive split + borrow/merge) | ✅ Hoàn thành |
 | 6 | HTree (ext4 Half-MD4 + binary search dx_entries) | ✅ Hoàn thành |
-| 7 | Benchmark + Visualization | ⬜ Chưa bắt đầu |
+| 7 | Benchmark + Visualization | ✅ Hoàn thành |
 | 8 | Phân tích + Báo cáo | ⬜ Chưa bắt đầu |
 
 ## 🔧 Yêu cầu hệ thống
@@ -81,9 +81,11 @@ linux-directory-indexing/
 │   ├── week3_progress.md    # Báo cáo tuần 3
 │   ├── week4_progress.md    # Báo cáo tuần 4
 │   ├── week5_progress.md    # Báo cáo tuần 5
-│   └── week6_progress.md    # Báo cáo tuần 6
-├── results/                 # Kết quả benchmark (CSV)
+│   ├── week6_progress.md    # Báo cáo tuần 6
+│   └── week7_progress.md    # Báo cáo tuần 7
+├── results/                 # Kết quả benchmark (CSV + PNG charts)
 └── scripts/                 # Scripts phụ trợ
+    └── visualize.py         # Tạo biểu đồ so sánh (matplotlib)
 ```
 
 ## 📊 Operations đã triển khai

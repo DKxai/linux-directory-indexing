@@ -284,7 +284,7 @@ static void print_menu(void) {
   printf("\n");
   printf("╔══════════════════════════════════════════════════════════╗\n");
   printf("║   Directory Lookup Performance Benchmark                 ║\n");
-  printf("║   Week 6: Linear + Hash + B-Tree + HTree (ext4)         ║\n");
+  printf("║   Week 7: Linear + Hash + B-Tree + HTree (ext4)         ║\n");
   printf("║   ─────────────────────────────────────────              ║\n");
   printf("║   Operating Systems Project                              ║\n");
   printf("╠══════════════════════════════════════════════════════════╣\n");
