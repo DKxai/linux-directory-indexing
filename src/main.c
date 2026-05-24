@@ -298,31 +298,30 @@ static void run_single_method(void) {
 static void print_menu(void) {
   printf("\n");
   printf(C_CYAN C_BOLD);
-  printf("  ┌──────────────────────────────────────────────────────────┐\n");
-  printf("  │                                                          │\n");
-  printf("  │   ██████╗ ██╗██████╗     ██╗      ██████╗  ██████╗ ██╗  │\n");
-  printf("  │   ██╔══██╗██║██╔══██╗    ██║     ██╔═══██╗██╔═══██╗██║  │\n");
-  printf("  │   ██║  ██║██║██████╔╝    ██║     ██║   ██║██║   ██║██║  │\n");
-  printf("  │   ██║  ██║██║██╔══██╗    ██║     ██║   ██║██║   ██║██║  │\n");
-  printf("  │   ██████╔╝██║██║  ██║    ███████╗╚██████╔╝╚██████╔╝██║  │\n");
-  printf("  │   ╚═════╝ ╚═╝╚═╝  ╚═╝    ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  │\n");
-  printf("  │                                                          │\n");
+  printf("  ┌────────────────────────────────────────────────────────────────────┐\n");
+  printf("  │                                                                    │\n");
+  printf("  │  ██████╗ ██╗██████╗    ██╗      ██████╗  ██████╗ ██╗  ██╗         │\n");
+  printf("  │  ██╔══██╗██║██╔══██╗   ██║     ██╔═══██╗██╔═══██╗██║ ██╔╝         │\n");
+  printf("  │  ██║  ██║██║██████╔╝   ██║     ██║   ██║██║   ██║█████╔╝          │\n");
+  printf("  │  ██║  ██║██║██╔══██╗   ██║     ██║   ██║██║   ██║██╔═██╗          │\n");
+  printf("  │  ██████╔╝██║██║  ██║   ███████╗╚██████╔╝╚██████╔╝██║  ██╗        │\n");
+  printf("  │  ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝        │\n");
+  printf("  │                                                                    │\n");
   printf(C_RESET);
-  printf(C_WHITE "  │" C_RESET "   " C_BOLD "Directory Lookup Performance Benchmark" C_RESET "          " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_DIM "Week 7  •  Operating Systems Project" C_RESET "            " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_DIM "Linear • Hash • B-Tree • HTree (ext4)" C_RESET "          " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │                                                          │" C_RESET "\n");
-  printf(C_CYAN "  ├──────────────────────────────────────────────────────────┤" C_RESET "\n");
-  printf(C_WHITE "  │                                                          │" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_GREEN C_BOLD "[1]" C_RESET " 🚀 Run full benchmark " C_DIM "(all 4 methods)" C_RESET "        " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_BLUE C_BOLD "[2]" C_RESET " 🔬 Run single method benchmark" C_RESET "               " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_MAGENTA C_BOLD "[3]" C_RESET " 🎮 Interactive demo " C_DIM "(compare live)" C_RESET "         " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_ORANGE C_BOLD "[4]" C_RESET " 📊 View results summary" C_RESET "                     " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_YELLOW C_BOLD "[5]" C_RESET " 💾 Export results to CSV" C_RESET "                    " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_RED C_BOLD "[0]" C_RESET " 🚪 Exit" C_RESET "                                     " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │                                                          │" C_RESET "\n");
-  printf(C_CYAN "  └──────────────────────────────────────────────────────────┘" C_RESET "\n");
-  printf("\n  " C_CYAN C_BOLD "▸" C_RESET " Your choice: ");
+  printf(C_WHITE "  │" C_RESET "   " C_BOLD "Directory Lookup Performance Benchmark" C_RESET "                          " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_DIM "Operating Systems Project" C_RESET "                                       " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
+  printf(C_CYAN "  ├────────────────────────────────────────────────────────────────────┤" C_RESET "\n");
+  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_GREEN C_BOLD "[1]" C_RESET " Run full benchmark " C_DIM "(all 4 methods)" C_RESET "                         " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_BLUE C_BOLD "[2]" C_RESET " Run single method benchmark" C_RESET "                                " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_MAGENTA C_BOLD "[3]" C_RESET " Interactive demo " C_DIM "(compare live)" C_RESET "                          " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_ORANGE C_BOLD "[4]" C_RESET " View results summary" C_RESET "                                      " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_YELLOW C_BOLD "[5]" C_RESET " Export results to CSV" C_RESET "                                     " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │" C_RESET "   " C_RED C_BOLD "[0]" C_RESET " Exit" C_RESET "                                                      " C_WHITE "│" C_RESET "\n");
+  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
+  printf(C_CYAN "  └────────────────────────────────────────────────────────────────────┘" C_RESET "\n");
+  printf("\n  " C_CYAN C_BOLD ">" C_RESET " Your choice: ");
 }
 
 // auto_visualize - Tu dong chay Python visualization sau khi export CSV
@@ -407,7 +406,7 @@ int main(int argc, char *argv[]) {
       }
       break;
     case 0:
-      printf("\n  Goodbye! 👋\n\n");
+      printf("\n  Goodbye!\n\n");
       running = 0;
       break;
     default:
