@@ -325,6 +325,19 @@ static void print_menu(void) {
   printf("\n  " C_CYAN C_BOLD "▸" C_RESET " Your choice: ");
 }
 
+// auto_visualize - Tu dong chay Python visualization sau khi export CSV
+static void auto_visualize(void) {
+  printf("\n" C_CYAN C_BOLD "  ▸" C_RESET " Generating visualization charts...\n");
+  int ret = system("python3 scripts/visualize.py 2>/dev/null");
+  if (ret != 0) {
+    // Thu lai voi python neu python3 khong co
+    ret = system("python scripts/visualize.py 2>/dev/null");
+  }
+  if (ret != 0) {
+    printf(C_YELLOW "  ⚠ Could not generate charts (python3 + matplotlib required)" C_RESET "\n");
+  }
+}
+
 // main - Router cac dieu huong menu va parse c-arguments
 int main(int argc, char *argv[]) {
   // Check flags skip menu
@@ -333,6 +346,7 @@ int main(int argc, char *argv[]) {
       g_result_count = run_all_benchmarks(g_results, MAX_RESULTS);
       print_results_table(g_results, g_result_count);
       export_csv(g_results, g_result_count, "results/benchmark_results.csv");
+      auto_visualize();
       return 0;
     }
     if (strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "-h") == 0) {
@@ -368,6 +382,7 @@ int main(int argc, char *argv[]) {
       if (g_result_count > 0) {
         print_results_table(g_results, g_result_count);
         export_csv(g_results, g_result_count, "results/benchmark_results.csv");
+        auto_visualize();
       }
       break;
     case 2:
@@ -388,6 +403,7 @@ int main(int argc, char *argv[]) {
         printf("\n  ⚠ Chua co ket qua!\n");
       } else {
         export_csv(g_results, g_result_count, "results/benchmark_results.csv");
+        auto_visualize();
       }
       break;
     case 0:
