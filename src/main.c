@@ -1,12 +1,12 @@
 // main.c - Application Entry Point
 
 #include "benchmark.h"
+#include "btree.h"
 #include "common.h"
 #include "dir_entry.h"
-#include "linear_search.h"
 #include "hash_table.h"
-#include "btree.h"
 #include "htree.h"
+#include "linear_search.h"
 
 #define MAX_RESULTS (NUM_TEST_SIZES * METHOD_COUNT)
 
@@ -188,7 +188,8 @@ static void run_interactive_demo(void) {
   printf("  Hash Table:     %zu KB\n", hash_memory_usage(ht) / 1024);
   printf("  B-Tree:         %zu KB\n", btree_memory_usage(bt) / 1024);
   printf("  HTree:          %zu KB\n", htree_memory_usage(htree) / 1024);
-  printf("  Entries count:  Linear=%d, Hash=%d, B-Tree=%d, HTree=%d (da xoa 1 moi ben)\n",
+  printf("  Entries count:  Linear=%d, Hash=%d, B-Tree=%d, HTree=%d (da xoa 1 "
+         "moi ben)\n",
          lin_dir->count, ht->count, bt->count, htree->count);
 
   // In stats
@@ -221,7 +222,8 @@ static void run_single_method(void) {
 
   int method_choice;
   int c;
-  if (scanf("%d", &method_choice) != 1 || method_choice < 1 || method_choice > 4) {
+  if (scanf("%d", &method_choice) != 1 || method_choice < 1 ||
+      method_choice > 4) {
     printf("  ✗ Lua chon khong hop le!\n");
     while ((c = getchar()) != '\n' && c != EOF)
       ;
@@ -231,10 +233,14 @@ static void run_single_method(void) {
     ;
 
   MethodType selected;
-  if (method_choice == 1) selected = METHOD_LINEAR;
-  else if (method_choice == 2) selected = METHOD_HASH;
-  else if (method_choice == 3) selected = METHOD_BTREE;
-  else selected = METHOD_HTREE;
+  if (method_choice == 1)
+    selected = METHOD_LINEAR;
+  else if (method_choice == 2)
+    selected = METHOD_HASH;
+  else if (method_choice == 3)
+    selected = METHOD_BTREE;
+  else
+    selected = METHOD_HTREE;
 
   printf("  Nhap so entries (100-1000000): ");
   int n;
@@ -280,60 +286,104 @@ static void run_single_method(void) {
 }
 
 // ANSI color codes
-#define C_RESET   "\033[0m"
-#define C_BOLD    "\033[1m"
-#define C_DIM     "\033[2m"
-#define C_CYAN    "\033[36m"
-#define C_GREEN   "\033[32m"
-#define C_YELLOW  "\033[33m"
-#define C_RED     "\033[31m"
-#define C_BLUE    "\033[34m"
+#define C_RESET "\033[0m"
+#define C_BOLD "\033[1m"
+#define C_DIM "\033[2m"
+#define C_CYAN "\033[36m"
+#define C_GREEN "\033[32m"
+#define C_YELLOW "\033[33m"
+#define C_RED "\033[31m"
+#define C_BLUE "\033[34m"
 #define C_MAGENTA "\033[35m"
-#define C_WHITE   "\033[97m"
+#define C_WHITE "\033[97m"
 #define C_BG_DARK "\033[48;5;235m"
-#define C_ORANGE  "\033[38;5;208m"
-#define C_GRAY    "\033[38;5;245m"
+#define C_ORANGE "\033[38;5;208m"
+#define C_GRAY "\033[38;5;245m"
+
+// helper_print_border_line - In dong co padding de vien luon thang hang va cung mau xanh
+static void print_menu_line(const char *num_ansi, const char *num_str, const char *text, const char *desc) {
+  printf(C_CYAN C_BOLD "  │" C_RESET "   ");
+  
+  int printed_len = 3;
+  if (num_ansi && num_str) {
+    printf("%s[%s]" C_RESET " %s", num_ansi, num_str, text);
+    printed_len += 4 + strlen(text); // "[X] " is 4 chars
+  } else {
+    printf("%s", text);
+    printed_len += strlen(text);
+  }
+  
+  if (desc && strlen(desc) > 0) {
+    printf(" %s%s" C_RESET, C_DIM, desc);
+    printed_len += 1 + strlen(desc);
+  }
+  
+  int padding = 68 - printed_len;
+  for (int i = 0; i < padding; i++) {
+    putchar(' ');
+  }
+  printf(C_CYAN C_BOLD "│" C_RESET "\n");
+}
 
 // print_menu - Render Option
 static void print_menu(void) {
   printf("\n");
+  // 1. ASCII Art Banner ngoai box (Tranh loi font/rong chu Unicode lam lech vien)
   printf(C_CYAN C_BOLD);
-  printf("  ┌────────────────────────────────────────────────────────────────────┐\n");
-  printf("  │                                                                    │\n");
-  printf("  │  ██████╗ ██╗██████╗    ██╗      ██████╗  ██████╗ ██╗  ██╗         │\n");
-  printf("  │  ██╔══██╗██║██╔══██╗   ██║     ██╔═══██╗██╔═══██╗██║ ██╔╝         │\n");
-  printf("  │  ██║  ██║██║██████╔╝   ██║     ██║   ██║██║   ██║█████╔╝          │\n");
-  printf("  │  ██║  ██║██║██╔══██╗   ██║     ██║   ██║██║   ██║██╔═██╗          │\n");
-  printf("  │  ██████╔╝██║██║  ██║   ███████╗╚██████╔╝╚██████╔╝██║  ██╗        │\n");
-  printf("  │  ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝        │\n");
-  printf("  │                                                                    │\n");
-  printf(C_RESET);
-  printf(C_WHITE "  │" C_RESET "   " C_BOLD "Directory Lookup Performance Benchmark" C_RESET "                          " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_DIM "Operating Systems Project" C_RESET "                                       " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
-  printf(C_CYAN "  ├────────────────────────────────────────────────────────────────────┤" C_RESET "\n");
-  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_GREEN C_BOLD "[1]" C_RESET " Run full benchmark " C_DIM "(all 4 methods)" C_RESET "                         " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_BLUE C_BOLD "[2]" C_RESET " Run single method benchmark" C_RESET "                                " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_MAGENTA C_BOLD "[3]" C_RESET " Interactive demo " C_DIM "(compare live)" C_RESET "                          " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_ORANGE C_BOLD "[4]" C_RESET " View results summary" C_RESET "                                      " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_YELLOW C_BOLD "[5]" C_RESET " Export results to CSV" C_RESET "                                     " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │" C_RESET "   " C_RED C_BOLD "[0]" C_RESET " Exit" C_RESET "                                                      " C_WHITE "│" C_RESET "\n");
-  printf(C_WHITE "  │                                                                    │" C_RESET "\n");
-  printf(C_CYAN "  └────────────────────────────────────────────────────────────────────┘" C_RESET "\n");
+  printf("  ██████╗ ██╗██████╗    ██╗      ██████╗  ██████╗ ██╗  ██╗\n");
+  printf("  ██╔══██╗██║██╔══██╗   ██║     ██╔═══██╗██╔═══██╗██║ ██╔╝\n");
+  printf("  ██║  ██║██║██████╔╝   ██║     ██║   ██║██║   ██║█████╔╝ \n");
+  printf("  ██║  ██║██║██╔══██╗   ██║     ██║   ██║██║   ██║██╔═██╗ \n");
+  printf("  ██████╔╝██║██║  ██║   ███████╗╚██████╔╝╚██████╔╝██║  ██╗\n");
+  printf("  ╚═════╝ ╚═╝╚═╝  ╚═╝   ╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝\n");
+  printf(C_RESET "\n");
+
+  // 2. Box Menu voi vien Cyan Bold thang hang tuyet doi (Width inside = 68 chars)
+  printf(C_CYAN C_BOLD "  ┌────────────────────────────────────────────────────────────────────┐\n" C_RESET);
+  print_menu_line(NULL, NULL, "", "");
+  
+  // Title & Subtitle inside the box
+  printf(C_CYAN C_BOLD "  │" C_RESET "   " C_BOLD "Directory Lookup Performance Benchmark" C_RESET);
+  int len1 = 3 + 38;
+  for (int i = 0; i < (68 - len1); i++) putchar(' ');
+  printf(C_CYAN C_BOLD "│" C_RESET "\n");
+
+  printf(C_CYAN C_BOLD "  │" C_RESET "   " C_DIM "Operating Systems Project" C_RESET);
+  int len2 = 3 + 25;
+  for (int i = 0; i < (68 - len2); i++) putchar(' ');
+  printf(C_CYAN C_BOLD "│" C_RESET "\n");
+
+  print_menu_line(NULL, NULL, "", "");
+  printf(C_CYAN C_BOLD "  ├────────────────────────────────────────────────────────────────────┤\n" C_RESET);
+  print_menu_line(NULL, NULL, "", "");
+
+  // Options
+  print_menu_line(C_GREEN C_BOLD, "1", "Run full benchmark", "(all 4 methods)");
+  print_menu_line(C_BLUE C_BOLD, "2", "Run single method benchmark", "");
+  print_menu_line(C_MAGENTA C_BOLD, "3", "Interactive demo", "(compare live)");
+  print_menu_line(C_ORANGE C_BOLD, "4", "View results summary", "");
+  print_menu_line(C_YELLOW C_BOLD, "5", "Export results to CSV", "");
+  print_menu_line(C_RED C_BOLD, "0", "Exit", "");
+
+  print_menu_line(NULL, NULL, "", "");
+  printf(C_CYAN C_BOLD "  └────────────────────────────────────────────────────────────────────┘\n" C_RESET);
   printf("\n  " C_CYAN C_BOLD ">" C_RESET " Your choice: ");
 }
 
 // auto_visualize - Tu dong chay Python visualization sau khi export CSV
 static void auto_visualize(void) {
-  printf("\n" C_CYAN C_BOLD "  ▸" C_RESET " Generating visualization charts...\n");
+  printf("\n" C_CYAN C_BOLD "  ▸" C_RESET
+         " Generating visualization charts...\n");
   int ret = system("python3 scripts/visualize.py 2>/dev/null");
   if (ret != 0) {
     // Thu lai voi python neu python3 khong co
     ret = system("python scripts/visualize.py 2>/dev/null");
   }
   if (ret != 0) {
-    printf(C_YELLOW "  ⚠ Could not generate charts (python3 + matplotlib required)" C_RESET "\n");
+    printf(
+        C_YELLOW
+        "  ⚠ Could not generate charts (python3 + matplotlib required)" C_RESET
+        "\n");
   }
 }
 
