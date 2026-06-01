@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 
-# ──── Professional Dark Color Palette ────
-DARK_BG      = '#0D1117'
-CARD_BG      = '#161B22'
-GRID_COLOR   = '#30363D'
-TEXT_COLOR   = '#E6EDF3'
-TEXT_DIM     = '#8B949E'
-ACCENT_CYAN  = '#58A6FF'
+# ──── Professional Light Color Palette ────
+DARK_BG      = '#FFFFFF'
+CARD_BG      = '#F6F8FA'
+GRID_COLOR   = '#D0D7DE'
+TEXT_COLOR   = '#24292F'
+TEXT_DIM     = '#57606A'
+ACCENT_CYAN  = '#0969DA'
 
 COLORS = {
     'Linear Search': '#F85149',   # Vibrant Red
@@ -72,8 +72,8 @@ def load_data(csv_path):
     return data
 
 
-def set_dark_style():
-    """Apply dark theme styling globally."""
+def set_light_style():
+    """Apply light theme styling globally."""
     plt.rcParams.update({
         'figure.facecolor':    DARK_BG,
         'axes.facecolor':      CARD_BG,
@@ -431,8 +431,8 @@ def main():
     print(f"  Test sizes: {', '.join(str(s) for s in sizes)}")
     print(f"  Total test cases: {len(methods) * len(sizes)}\n")
 
-    print("  Generating charts (dark theme)...")
-    set_dark_style()
+    print("  Generating charts (light theme)...")
+    set_light_style()
     plot_lookup_performance(data, output_dir)
     plot_delete_performance(data, output_dir)
     plot_insert_performance(data, output_dir)
