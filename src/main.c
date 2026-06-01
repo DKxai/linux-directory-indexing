@@ -363,6 +363,7 @@ static void print_menu(void) {
   print_menu_line(C_MAGENTA C_BOLD, "3", "Interactive demo", "(compare live)");
   print_menu_line(C_ORANGE C_BOLD, "4", "View results summary", "");
   print_menu_line(C_YELLOW C_BOLD, "5", "Export results to CSV", "");
+  print_menu_line(C_WHITE C_BOLD, "6", "Index a real directory", "(filesystem scan)");
   print_menu_line(C_RED C_BOLD, "0", "Exit", "");
 
   print_menu_line(NULL, NULL, "", "");
@@ -385,6 +386,161 @@ static void auto_visualize(void) {
         "  ⚠ Could not generate charts (python3 + matplotlib required)" C_RESET
         "\n");
   }
+}
+
+// run_index_real_directory - Doc thu muc that, xay dung index, cho phep tim kiem
+static void run_index_real_directory(void) {
+  print_header("INDEX A REAL DIRECTORY");
+
+  printf("  Nhap duong dan thu muc (vd: /usr/bin): ");
+  char path[1024];
+  if (scanf("%1023s", path) != 1) {
+    printf("  " C_RED "✗" C_RESET " Duong dan khong hop le!\n");
+    int c; while ((c = getchar()) != '\n' && c != EOF);
+    return;
+  }
+  int c;
+  while ((c = getchar()) != '\n' && c != EOF);
+
+  // Doc thu muc that
+  int entry_count = 0;
+  DirEntry *entries = scan_real_directory(path, &entry_count);
+  if (!entries || entry_count == 0) {
+    printf("  " C_RED "✗" C_RESET " Khong doc duoc thu muc hoac thu muc rong!\n");
+    return;
+  }
+
+  printf("\n  " C_GREEN "✓" C_RESET " Da doc " C_BOLD "%d" C_RESET " entries tu " C_CYAN "%s" C_RESET "\n", entry_count, path);
+
+  // Hien thi mau
+  int show = entry_count < 10 ? entry_count : 10;
+  printf("\n  Mau entries (%d/%d):\n", show, entry_count);
+  for (int i = 0; i < show; i++) {
+    print_dir_entry(&entries[i]);
+  }
+  if (entry_count > 10) {
+    printf("  ... va %d entries khac\n", entry_count - 10);
+  }
+
+  // Xay dung 4 indexes
+  printf("\n  Dang xay dung indexes...\n");
+  TIMER_DECLARE();
+
+  TIMER_START();
+  LinearDir *lin = linear_create();
+  for (int i = 0; i < entry_count; i++) linear_insert(lin, &entries[i]);
+  TIMER_END();
+  uint64_t t_lin = TIMER_ELAPSED_NS() / 1000;
+
+  TIMER_START();
+  HashTable *ht = hash_create();
+  for (int i = 0; i < entry_count; i++) hash_insert(ht, &entries[i]);
+  TIMER_END();
+  uint64_t t_hash = TIMER_ELAPSED_NS() / 1000;
+
+  TIMER_START();
+  BTree *bt = btree_create();
+  for (int i = 0; i < entry_count; i++) btree_insert(bt, &entries[i]);
+  TIMER_END();
+  uint64_t t_bt = TIMER_ELAPSED_NS() / 1000;
+
+  TIMER_START();
+  HTree *htree = htree_create();
+  for (int i = 0; i < entry_count; i++) htree_insert(htree, &entries[i]);
+  TIMER_END();
+  uint64_t t_ht = TIMER_ELAPSED_NS() / 1000;
+
+  printf("  " C_GREEN "✓" C_RESET " Indexed %d entries thanh cong!\n", entry_count);
+  printf("\n  Thoi gian xay dung index:\n");
+  printf("  ─────────────────────────────────────────────\n");
+  printf("  Linear Search:  %lu us\n", (unsigned long)t_lin);
+  printf("  Hash Table:     %lu us\n", (unsigned long)t_hash);
+  printf("  B-Tree:         %lu us\n", (unsigned long)t_bt);
+  printf("  HTree (ext4):   %lu us\n", (unsigned long)t_ht);
+
+  printf("\n  Memory Usage:\n");
+  printf("  ─────────────────────────────────────────────\n");
+  printf("  Linear Search:  %zu KB\n", linear_memory_usage(lin) / 1024);
+  printf("  Hash Table:     %zu KB\n", hash_memory_usage(ht) / 1024);
+  printf("  B-Tree:         %zu KB\n", btree_memory_usage(bt) / 1024);
+  printf("  HTree (ext4):   %zu KB\n", htree_memory_usage(htree) / 1024);
+
+  // Vong lap tim kiem tuong tac
+  printf("\n" C_CYAN C_BOLD "  ▸" C_RESET " Tim kiem trong thu muc da index (nhap 'q' de thoat):\n");
+
+  while (1) {
+    printf("\n  " C_CYAN ">" C_RESET " Nhap ten file can tim: ");
+    char search_name[MAX_FILENAME_LEN + 1];
+    if (!fgets(search_name, sizeof(search_name), stdin)) break;
+
+    // Xoa ky tu newline cuoi chuoi
+    size_t slen = strlen(search_name);
+    if (slen > 0 && search_name[slen - 1] == '\n') {
+      search_name[slen - 1] = '\0';
+    }
+
+    // Kiem tra chuoi rong
+    if (strlen(search_name) == 0) continue;
+
+    if (strcmp(search_name, "q") == 0 || strcmp(search_name, "quit") == 0) {
+      break;
+    }
+
+    printf("\n  Ket qua tim kiem \"%s\":\n", search_name);
+    printf("  ─────────────────────────────────────────────\n");
+
+    uint64_t comp;
+
+    // Linear
+    TIMER_START();
+    comp = 0;
+    DirEntry *r1 = linear_lookup(lin, search_name, &comp);
+    TIMER_END();
+    printf("  Linear Search:  %s | %lu comparisons | %lu ns\n",
+           r1 ? C_GREEN "FOUND" C_RESET : C_RED "NOT FOUND" C_RESET,
+           (unsigned long)comp, (unsigned long)TIMER_ELAPSED_NS());
+
+    // Hash
+    TIMER_START();
+    comp = 0;
+    DirEntry *r2 = hash_lookup(ht, search_name, &comp);
+    TIMER_END();
+    printf("  Hash Table:     %s | %lu comparisons | %lu ns\n",
+           r2 ? C_GREEN "FOUND" C_RESET : C_RED "NOT FOUND" C_RESET,
+           (unsigned long)comp, (unsigned long)TIMER_ELAPSED_NS());
+
+    // B-Tree
+    TIMER_START();
+    comp = 0;
+    DirEntry *r3 = btree_lookup(bt, search_name, &comp);
+    TIMER_END();
+    printf("  B-Tree:         %s | %lu comparisons | %lu ns\n",
+           r3 ? C_GREEN "FOUND" C_RESET : C_RED "NOT FOUND" C_RESET,
+           (unsigned long)comp, (unsigned long)TIMER_ELAPSED_NS());
+
+    // HTree
+    TIMER_START();
+    comp = 0;
+    DirEntry *r4 = htree_lookup(htree, search_name, &comp);
+    TIMER_END();
+    printf("  HTree (ext4):   %s | %lu comparisons | %lu ns\n",
+           r4 ? C_GREEN "FOUND" C_RESET : C_RED "NOT FOUND" C_RESET,
+           (unsigned long)comp, (unsigned long)TIMER_ELAPSED_NS());
+
+    // In chi tiet entry neu tim thay
+    if (r1) {
+      printf("\n  Chi tiet entry:\n");
+      print_dir_entry(r1);
+    }
+  }
+
+  linear_destroy(lin);
+  hash_destroy(ht);
+  btree_destroy(bt);
+  htree_destroy(htree);
+  free(entries);
+
+  printf("\n  " C_GREEN "✓" C_RESET " Ket thuc index directory.\n");
 }
 
 // main - Router cac dieu huong menu va parse c-arguments
@@ -454,6 +610,9 @@ int main(int argc, char *argv[]) {
         export_csv(g_results, g_result_count, "results/benchmark_results.csv");
         auto_visualize();
       }
+      break;
+    case 6:
+      run_index_real_directory();
       break;
     case 0:
       printf("\n  Goodbye!\n\n");

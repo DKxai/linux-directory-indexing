@@ -1,6 +1,8 @@
 // dir_entry.c - Cac ham tao data test cho DirEntry
 
 #include "dir_entry.h"
+#include <dirent.h>
+#include <sys/stat.h>
 
 static const char* EXTENSIONS[] = {
     ".c", ".h", ".o", ".py", ".js", ".html", ".css", ".txt",
@@ -118,4 +120,77 @@ void print_dir_entry(const DirEntry* entry) {
         default:          type_str = "UNKN"; break;
     }
     printf("  [%s] inode=%-8u name=%s\n", type_str, entry->inode, entry->name);
+}
+
+// d_type_to_file_type - Chuyen doi d_type cua dirent sang file_type giong ext4
+static uint8_t d_type_to_file_type(unsigned char d_type) {
+    switch (d_type) {
+        case DT_REG:  return FT_REG_FILE;
+        case DT_DIR:  return FT_DIR;
+        case DT_LNK:  return FT_SYMLINK;
+        case DT_CHR:  return FT_CHRDEV;
+        case DT_BLK:  return FT_BLKDEV;
+        case DT_FIFO: return FT_FIFO;
+        case DT_SOCK: return FT_SOCK;
+        default:      return FT_UNKNOWN;
+    }
+}
+
+// scan_real_directory - Doc thu muc that tu filesystem
+// Su dung opendir/readdir (POSIX) de lay danh sach entries
+// Bo qua "." va ".." (giong cach ext4 xu ly)
+DirEntry* scan_real_directory(const char* path, int* out_count) {
+    if (!path || !out_count) return NULL;
+
+    DIR* dp = opendir(path);
+    if (!dp) {
+        fprintf(stderr, "  Error: Cannot open directory '%s'\n", path);
+        return NULL;
+    }
+
+    // Dem so entries truoc (bo qua . va ..)
+    int count = 0;
+    struct dirent* de;
+    while ((de = readdir(dp)) != NULL) {
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+            continue;
+        count++;
+    }
+
+    if (count == 0) {
+        closedir(dp);
+        fprintf(stderr, "  Warning: Directory '%s' is empty\n", path);
+        *out_count = 0;
+        return NULL;
+    }
+
+    // Cap phat mang entries
+    DirEntry* entries = (DirEntry*)malloc(count * sizeof(DirEntry));
+    if (!entries) {
+        closedir(dp);
+        return NULL;
+    }
+
+    // Quay lai dau thu muc va doc entries
+    rewinddir(dp);
+    int idx = 0;
+    uint32_t fake_inode = 1;
+
+    while ((de = readdir(dp)) != NULL && idx < count) {
+        if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+            continue;
+
+        // Dung d_ino that neu co, neu khong thi dung fake
+        entries[idx].inode = (de->d_ino > 0) ? (uint32_t)de->d_ino : fake_inode++;
+        entries[idx].file_type = d_type_to_file_type(de->d_type);
+        strncpy(entries[idx].name, de->d_name, MAX_FILENAME_LEN);
+        entries[idx].name[MAX_FILENAME_LEN] = '\0';
+        entries[idx].name_len = (uint8_t)strlen(entries[idx].name);
+        entries[idx].rec_len = (uint16_t)sizeof(DirEntry);
+        idx++;
+    }
+
+    closedir(dp);
+    *out_count = idx;
+    return entries;
 }

@@ -42,4 +42,8 @@ char** generate_delete_targets(DirEntry* entries, int num_entries, int num_targe
 // print_dir_entry - In thong tin DirEntry
 void print_dir_entry(const DirEntry* entry);
 
+// scan_real_directory - Doc thu muc that tren filesystem
+// Tra ve mang DirEntry va ghi so luong vao *out_count
+DirEntry* scan_real_directory(const char* path, int* out_count);
+
 #endif /* DIR_ENTRY_H */
